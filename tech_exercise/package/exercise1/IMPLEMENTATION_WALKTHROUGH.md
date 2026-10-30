@@ -2,15 +2,16 @@
 
 ## History and scope
 
-The repository history contains three commits through the current `acts-exercise` branch:
+The repository history contains four commits through the current `acts-exercise` branch:
 
-| Commit | Date | Summary |
-|---|---|---|
-| `1c403bf` | 2025-09-17 | Initial commit |
-| `e85688e` | 2025-09-17 | add exercise |
+| Commit    | Date       | Summary               |
+| --------- | ---------- | --------------------- |
+| `1c403bf` | 2025-09-17 | Initial commit        |
+| `e85688e` | 2025-09-17 | add exercise          |
 | `6168176` | 2026-10-28 | acts exercise genesis |
+| `86ed664` | 2026-10-30 | Exodus                |
 
-The last commit, `6168176`, is the starting point for the ACTS exercise. There are no later commits in the current branch history. The API changes, API tests, and UI described below are present in the current workspace but are not part of a later commit: the API and test changes are staged, the README update is unstaged, and the Angular UI is untracked. Generated files and incidental artifacts are not included in this account.
+The latest commit, `86ed664` (`Exodus`), adds the completed ACTS implementation and this walkthrough on top of the `6168176` exercise genesis. Its changes include API rule enforcement and validation, person updates and unique-name enforcement, persisted process logging, API tests, and an Angular UI with UI tests. Generated build files and incidental artifacts are not included in this account.
 
 The exercise brief describes the Astronaut Career Tracking System (ACTS), which keeps a master list of people, current astronaut details, and each astronaut's duty history. Its required API operations are person lookup/list/create-update and astronaut-duty lookup/create. The brief also asks for the duty and retirement rules to be enforced, defensive coding, unit tests targeting more than 50% coverage, and database-persisted success and exception logs. A polished Angular UI is encouraged. See the [exercise brief](./README.md) and the [repository overview](../README.md).
 
@@ -22,7 +23,7 @@ The API already had MediatR query and command handlers for listing and looking u
 
 There was no test project or Angular UI at this point. The starting API, models, and initial migration are visible in the files committed at `6168176`.
 
-## Changes in the current workspace
+## Changes in the latest commit
 
 ### 1. Data access and database initialization
 
@@ -65,7 +66,7 @@ The Angular log view deliberately displays ordinary log fields without exposing 
 
 The new .NET test project uses xUnit, Moq, and an in-memory SQLite database. Tests cover business handlers, controller validation and response mapping, process logging behavior, and persisted log retrieval. The principal files are in [api.tests](./api.tests/).
 
-In this workspace, `dotnet test api.tests/StargateAPI.Tests.csproj` passed all 24 tests. Running with `--collect:"XPlat Code Coverage"` also passed all 24 tests and produced a Cobertura report with **52.94% line coverage** (531 of 1,003 lines) and **85.36% branch coverage** (70 of 82 branches). The measured line coverage exceeds the exercise brief's stated 50% target.
+`dotnet test api.tests/StargateAPI.Tests.csproj` passed all 24 tests. Running with `--collect:"XPlat Code Coverage"` also passed all 24 tests and produced a Cobertura report with **52.94% line coverage** (531 of 1,003 lines) and **85.36% branch coverage** (70 of 82 branches). The measured line coverage exceeds the exercise brief's stated 50% target.
 
 ### 6. Angular UI
 
@@ -97,10 +98,10 @@ npm test
 npm run build
 ```
 
-These commands and the proxy/base-URL details are also documented in the [exercise README](./README.md). In this workspace, `npm test` passed all 15 tests, and `npm run build` completed successfully.
+These commands and the proxy/base-URL details are also documented in the [exercise README](./README.md). `npm test` passed all 15 tests, and `npm run build` completed successfully.
 
 ## Current state and caveats
 
-The workspace now contains the API rule enforcement, name uniqueness and person update support, persisted process logs, API and UI tests, and an Angular client. The UI validates new-person names, but the API's `CreatePerson` action does not apply the same explicit empty/length checks as lookup and update. The verification results above apply to the current workspace changes, not to a later Git commit: `6168176` remains `HEAD`, and the implementation changes described here are still staged, unstaged, or untracked as noted above.
+The latest commit contains the API rule enforcement, name uniqueness and person update support, persisted process logs, API and UI tests, and an Angular client. The UI validates new-person names, but the API's `CreatePerson` action does not apply the same explicit empty/length checks as lookup and update. The verification results above describe the implementation's test and build runs; they do not claim a live end-to-end session against a running API.
 
 The exercise brief's >50% coverage objective was measured for the API test suite; no separate UI coverage percentage was collected. The UI tests and production build were run, but this walkthrough does not claim a live end-to-end session against a running API.
