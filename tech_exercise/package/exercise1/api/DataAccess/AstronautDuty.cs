@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace StargateAPI.Business.Data
+namespace StargateAPI.DataAccess
 {
     [Table("AstronautDuty")]
     public class AstronautDuty

@@ -1,6 +1,6 @@
 ﻿using Dapper;
 using MediatR;
-using StargateAPI.Business.Data;
+using StargateAPI.DataAccess;
 using StargateAPI.Business.Dtos;
 using StargateAPI.Controllers;
 
@@ -27,6 +27,7 @@ namespace StargateAPI.Business.Queries
             var people = await _context.Connection.QueryAsync<PersonAstronaut>(query);
 
             result.People = people.ToList();
+            result.Success = true;
 
             return result;
         }

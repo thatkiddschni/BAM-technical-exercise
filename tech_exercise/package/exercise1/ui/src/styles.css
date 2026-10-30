@@ -1,0 +1,35 @@
+:root {
+  color-scheme: dark;
+  --background: #101b2c;
+  --ink: #e9e7e0;
+  --muted: #9aa5b3;
+  --gold: #d1aa69;
+  --line: #29374a;
+  --serif: Georgia, 'Times New Roman', serif;
+  font-family: Arial, Helvetica, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 86% 9%, rgb(71 90 114 / 15%), transparent 29rem),
+    var(--background);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: rgb(209 170 105 / 35%);
+}

@@ -1,0 +1,406 @@
+<main class="page-shell">
+  <header class="topbar">
+    <a class="wordmark" href="/" aria-label="ACTS home">
+      <span class="wordmark-mark" aria-hidden="true">A</span>
+      <span>ACTS <span class="wordmark-divider">/</span> FLIGHT RECORDS</span>
+    </a>
+    <span class="system-status"><span aria-hidden="true"></span> RECORDS SYSTEM</span>
+  </header>
+
+  <section class="hero" aria-labelledby="page-title">
+    <div class="hero-copy">
+      <p class="eyebrow"><span>01</span> ASTRONAUT CAREER TRACKING SYSTEM</p>
+      <h1 id="page-title">Every mission<br>leaves a <em>mark.</em></h1>
+      <p class="hero-intro">Explore the people who have gone beyond the ordinary, and the duties that shaped their careers.</p>
+    </div>
+    <div class="orbit-art" aria-hidden="true">
+      <div class="orbit orbit-one"></div>
+      <div class="orbit orbit-two"></div>
+      <div class="orbit-core"><span></span></div>
+      <span class="orbit-caption">CAREER<br>ARCHIVE</span>
+      <span class="orbit-coordinate">38° 53' N<br>77° 02' W</span>
+    </div>
+  </section>
+
+  <nav class="workspace-nav" aria-label="Records workspaces">
+    @for (workspace of workspaces; track workspace.id) {
+      <button
+        type="button"
+        [class.active]="activeWorkspace === workspace.id"
+        [attr.aria-current]="activeWorkspace === workspace.id ? 'page' : null"
+        (click)="setWorkspace(workspace.id)"
+      >{{ workspace.label }}</button>
+    }
+  </nav>
+
+  @if (activeWorkspace === 'duties') {
+  <section class="search-panel" aria-labelledby="search-title">
+    <div class="search-heading">
+      <div>
+        <p class="eyebrow">PERSONNEL LOOKUP</p>
+        <h2 id="search-title">Find a flight record</h2>
+      </div>
+      <span class="search-index">SEARCH / 001</span>
+    </div>
+    <form [formGroup]="searchForm" (ngSubmit)="submitSearch()" novalidate>
+      <label for="astronaut-name">Astronaut name</label>
+      <div class="search-controls">
+        <input
+          id="astronaut-name"
+          type="text"
+          formControlName="name"
+          maxlength="50"
+          autocomplete="name"
+          placeholder="e.g. Sally Ride"
+          [attr.aria-invalid]="nameControl.invalid && nameControl.touched"
+          aria-describedby="name-hint name-error"
+          [disabled]="state === 'loading'"
+        >
+        <button type="submit" [disabled]="state === 'loading'">
+          @if (state === 'loading') {
+            <span class="button-spinner" aria-hidden="true"></span>
+            <span>Searching</span>
+          } @else {
+            <span>Search records</span>
+            <span class="button-arrow" aria-hidden="true">↗</span>
+          }
+        </button>
+      </div>
+      <div class="input-meta">
+        <span id="name-hint">Search by full name</span>
+        <span>{{ nameControl.value.length }} / 50</span>
+      </div>
+      @if (nameControl.touched && nameControl.hasError('required')) {
+        <p id="name-error" class="field-error" role="alert">Enter a name to search the records.</p>
+      } @else if (nameControl.touched && nameControl.hasError('whitespace')) {
+        <p id="name-error" class="field-error" role="alert">A name cannot contain only spaces.</p>
+      } @else if (nameControl.touched && nameControl.hasError('maxlength')) {
+        <p id="name-error" class="field-error" role="alert">Names must be 50 characters or fewer.</p>
+      }
+    </form>
+  </section>
+
+  @if (state === 'loading') {
+    <section class="feedback loading-panel" role="status" aria-live="polite">
+      <span class="loading-indicator" aria-hidden="true"></span>
+      <div>
+        <p class="eyebrow">QUERY IN PROGRESS</p>
+        <h2>Retrieving flight records</h2>
+        <p>Checking the personnel archive. This usually takes just a moment.</p>
+      </div>
+      <span class="loading-track" aria-hidden="true"><span></span></span>
+    </section>
+  }
+
+  @if (state === 'not-found') {
+    <section class="feedback message-panel" role="alert">
+      <span class="message-icon" aria-hidden="true">?</span>
+      <div>
+        <p class="eyebrow">NO MATCH FOUND</p>
+        <h2>We couldn't find that person.</h2>
+        <p>{{ errorMessage }}</p>
+        <p class="message-hint">Check the spelling and try searching again.</p>
+      </div>
+    </section>
+  }
+
+  @if (state === 'error') {
+    <section class="feedback message-panel error-panel" role="alert">
+      <span class="message-icon" aria-hidden="true">!</span>
+      <div>
+        <p class="eyebrow">REQUEST UNSUCCESSFUL</p>
+        <h2>Records are unavailable.</h2>
+        <p>{{ errorMessage }}</p>
+      </div>
+    </section>
+  }
+
+  @if (state === 'empty') {
+    <section class="feedback message-panel" role="status" aria-live="polite">
+      <span class="message-icon" aria-hidden="true">i</span>
+      <div>
+        <p class="eyebrow">CAREER RECORD</p>
+        <h2>{{ person?.name ?? 'Person found' }} has no recorded duties.</h2>
+        <p>{{ errorMessage || 'This person is in the personnel directory, but no astronaut assignments are on file.' }}</p>
+      </div>
+    </section>
+  }
+
+  @if (state === 'success' && person) {
+    <section class="results" aria-labelledby="results-title" aria-live="polite">
+      <div class="results-heading">
+        <div>
+          <p class="eyebrow"><span class="result-dot"></span> PERSONNEL RECORD / {{ person.personId.toString().padStart(4, '0') }}</p>
+          <h2 id="results-title">{{ person.name }}</h2>
+        </div>
+        <span class="assignment-count">{{ duties.length }} {{ duties.length === 1 ? 'ASSIGNMENT' : 'ASSIGNMENTS' }}</span>
+      </div>
+
+      <div class="profile-grid">
+        <article class="profile-card current-card">
+          <p class="card-label">CURRENT ASSIGNMENT</p>
+          @if (person.currentDutyTitle || person.currentRank) {
+            <h3>{{ person.currentDutyTitle || 'Duty not listed' }}</h3>
+            <p class="current-rank">{{ person.currentRank || 'Rank not listed' }}</p>
+          } @else {
+            <h3>No current assignment</h3>
+            <p class="current-rank">Current details are not available.</p>
+          }
+          <span class="current-rule" aria-hidden="true"></span>
+        </article>
+        <article class="profile-card">
+          <p class="card-label">CAREER START</p>
+          <h3>{{ person.careerStartDate ? (person.careerStartDate | date: 'MMM d, y') : 'Not recorded' }}</h3>
+          <p class="profile-footnote">First recorded assignment</p>
+        </article>
+        <article class="profile-card">
+          <p class="card-label">CAREER CONCLUDED</p>
+          <h3>{{ person.careerEndDate ? (person.careerEndDate | date: 'MMM d, y') : 'Active career' }}</h3>
+          <p class="profile-footnote">{{ person.careerEndDate ? 'Final day of service' : 'No end date on record' }}</p>
+        </article>
+      </div>
+
+      <div class="timeline-heading">
+        <div>
+          <p class="eyebrow">CAREER HISTORY</p>
+          <h3>Duty assignments</h3>
+        </div>
+        <span>NEWEST FIRST</span>
+      </div>
+
+      <ol class="timeline">
+        @for (duty of duties; track duty.id) {
+          <li class="timeline-item">
+            <span class="timeline-marker" aria-hidden="true"></span>
+            <div class="timeline-date">
+              <span>{{ duty.dutyStartDate | date: 'MMM d, y' }}</span>
+              <span class="date-separator" aria-hidden="true">—</span>
+              <span>{{ duty.dutyEndDate ? (duty.dutyEndDate | date: 'MMM d, y') : 'Present' }}</span>
+            </div>
+            <div class="timeline-detail">
+              <h4>{{ duty.dutyTitle }}</h4>
+              <p>{{ duty.rank }}</p>
+            </div>
+            @if (!duty.dutyEndDate) {
+              <span class="active-badge"><span aria-hidden="true"></span> CURRENT</span>
+            }
+          </li>
+        }
+      </ol>
+    </section>
+  }
+
+  @if (state === 'idle') {
+    <section class="empty-state" aria-label="Search guidance">
+      <span class="empty-state-line" aria-hidden="true"></span>
+      <p>YOUR NEXT SEARCH STARTS HERE</p>
+      <span class="empty-state-line" aria-hidden="true"></span>
+    </section>
+  }
+  }
+
+  @if (activeWorkspace === 'people') {
+    <section class="workspace-panel" aria-labelledby="people-title">
+      <div class="workspace-heading">
+        <div>
+          <p class="eyebrow">PERSONNEL DIRECTORY</p>
+          <h2 id="people-title">People records</h2>
+        </div>
+        <button class="outline-button" type="button" (click)="loadPeople()" [disabled]="peopleState === 'loading'">
+          {{ peopleState === 'loading' ? 'Loading directory…' : 'Load all people' }}
+        </button>
+      </div>
+
+      <div class="management-grid">
+        <section class="management-card" aria-labelledby="person-lookup-title">
+          <p class="eyebrow">RECORD LOOKUP</p>
+          <h3 id="person-lookup-title">Find a person</h3>
+          <form [formGroup]="personLookupForm" (ngSubmit)="submitPersonLookup()" novalidate>
+            <label for="person-lookup-name">Full name</label>
+            <div class="form-controls">
+              <input id="person-lookup-name" formControlName="name" maxlength="50" autocomplete="name">
+              <button type="submit" [disabled]="personLookupState === 'loading'">
+                {{ personLookupState === 'loading' ? 'Searching…' : 'Find person' }}
+              </button>
+            </div>
+            @if (personLookupForm.controls.name.touched && personLookupForm.controls.name.invalid) {
+              <p class="field-error" role="alert">Enter a name of 1–50 non-blank characters.</p>
+            }
+          </form>
+          @if (personLookupState === 'not-found' || personLookupState === 'error') {
+            <p class="action-message error-message" role="alert">{{ personLookupMessage }}</p>
+          }
+          @if (selectedPerson && personLookupState === 'success') {
+            <div class="person-summary" aria-live="polite">
+              <p><span>RECORD / {{ selectedPerson.personId }}</span><strong>{{ selectedPerson.name }}</strong></p>
+              <p><span>CURRENT DUTY</span><strong>{{ selectedPerson.currentDutyTitle || 'Not recorded' }}</strong></p>
+              <p><span>RANK</span><strong>{{ selectedPerson.currentRank || 'Not recorded' }}</strong></p>
+            </div>
+            <form class="inline-form" [formGroup]="updatePersonForm" (ngSubmit)="submitUpdatePerson()" novalidate>
+              <label for="updated-person-name">Update name</label>
+              <div class="form-controls">
+                <input id="updated-person-name" formControlName="name" maxlength="50" autocomplete="name">
+                <button type="submit" [disabled]="updatePersonState === 'loading'">
+                  {{ updatePersonState === 'loading' ? 'Saving…' : 'Save name' }}
+                </button>
+              </div>
+              @if (updatePersonForm.controls.name.touched && updatePersonForm.controls.name.invalid) {
+                <p class="field-error" role="alert">Enter a name of 1–50 non-blank characters.</p>
+              }
+              @if (updatePersonMessage) {
+                <p class="action-message" [class.error-message]="updatePersonState === 'error'" role="status">{{ updatePersonMessage }}</p>
+              }
+            </form>
+          }
+        </section>
+
+        <section class="management-card" aria-labelledby="create-person-title">
+          <p class="eyebrow">NEW RECORD</p>
+          <h3 id="create-person-title">Add a person</h3>
+          <form [formGroup]="createPersonForm" (ngSubmit)="submitCreatePerson()" novalidate>
+            <label for="create-person-name">Full name</label>
+            <div class="form-controls">
+              <input id="create-person-name" formControlName="name" maxlength="50" autocomplete="name">
+              <button type="submit" [disabled]="createPersonState === 'loading'">
+                {{ createPersonState === 'loading' ? 'Adding…' : 'Add person' }}
+              </button>
+            </div>
+            @if (createPersonForm.controls.name.touched && createPersonForm.controls.name.invalid) {
+              <p class="field-error" role="alert">Enter a name of 1–50 non-blank characters.</p>
+            }
+            @if (createPersonMessage) {
+              <p class="action-message" [class.error-message]="createPersonState === 'error'" role="status">{{ createPersonMessage }}</p>
+            }
+          </form>
+        </section>
+      </div>
+
+      @if (peopleState === 'loading') {
+        <p class="directory-note" role="status">Loading the personnel directory…</p>
+      } @else if (peopleState === 'error' || peopleState === 'not-found') {
+        <p class="action-message error-message" role="alert">{{ peopleError }}</p>
+      } @else if (peopleState === 'empty') {
+        <p class="directory-note" role="status">No people are currently listed.</p>
+      } @else if (peopleState === 'success') {
+        <div class="table-scroll">
+          <table>
+            <caption>All people in the personnel directory</caption>
+            <thead>
+              <tr><th scope="col">ID</th><th scope="col">Name</th><th scope="col">Current duty</th><th scope="col">Rank</th><th scope="col">Career started</th><th scope="col">Career ended</th></tr>
+            </thead>
+            <tbody>
+              @for (listedPerson of people; track listedPerson.personId) {
+                <tr>
+                  <td>{{ listedPerson.personId }}</td>
+                  <td>{{ listedPerson.name }}</td>
+                  <td>{{ listedPerson.currentDutyTitle || '—' }}</td>
+                  <td>{{ listedPerson.currentRank || '—' }}</td>
+                  <td>{{ listedPerson.careerStartDate ? (listedPerson.careerStartDate | date: 'MMM d, y') : '—' }}</td>
+                  <td>{{ listedPerson.careerEndDate ? (listedPerson.careerEndDate | date: 'MMM d, y') : '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+
+  @if (activeWorkspace === 'new-duty') {
+    <section class="workspace-panel" aria-labelledby="new-duty-title">
+      <div class="workspace-heading">
+        <div>
+          <p class="eyebrow">ASSIGNMENT ENTRY</p>
+          <h2 id="new-duty-title">Add an astronaut duty</h2>
+        </div>
+        <span class="search-index">NEW ASSIGNMENT</span>
+      </div>
+      <p class="workspace-intro">Record an assignment for a person already in the directory. A new assignment closes the previous duty automatically.</p>
+      <form class="duty-form" [formGroup]="createDutyForm" (ngSubmit)="submitCreateDuty()" novalidate>
+        <div class="form-field">
+          <label for="duty-person-name">Person name</label>
+          <input id="duty-person-name" formControlName="name" maxlength="50" autocomplete="name">
+          @if (createDutyForm.controls.name.touched && createDutyForm.controls.name.invalid) {
+            <p class="field-error" role="alert">Enter a name of 1–50 non-blank characters.</p>
+          }
+        </div>
+        <div class="form-field">
+          <label for="duty-rank">Rank</label>
+          <input id="duty-rank" formControlName="rank" autocomplete="off">
+          @if (createDutyForm.controls.rank.touched && createDutyForm.controls.rank.invalid) {
+            <p class="field-error" role="alert">Rank is required.</p>
+          }
+        </div>
+        <div class="form-field">
+          <label for="duty-title">Duty title</label>
+          <input id="duty-title" formControlName="dutyTitle" autocomplete="off">
+          @if (createDutyForm.controls.dutyTitle.touched && createDutyForm.controls.dutyTitle.invalid) {
+            <p class="field-error" role="alert">Duty title is required.</p>
+          }
+        </div>
+        <div class="form-field">
+          <label for="duty-start-date">Duty start date</label>
+          <input id="duty-start-date" type="date" formControlName="dutyStartDate">
+          @if (createDutyForm.controls.dutyStartDate.touched && createDutyForm.controls.dutyStartDate.invalid) {
+            <p class="field-error" role="alert">Duty start date is required.</p>
+          }
+        </div>
+        <button class="primary-button" type="submit" [disabled]="createDutyState === 'loading'">
+          {{ createDutyState === 'loading' ? 'Saving assignment…' : 'Add assignment' }}
+        </button>
+        @if (createDutyMessage) {
+          <p class="action-message" [class.error-message]="createDutyState === 'error'" role="status">{{ createDutyMessage }}</p>
+        }
+      </form>
+    </section>
+  }
+
+  @if (activeWorkspace === 'logs') {
+    <section class="workspace-panel" aria-labelledby="logs-title">
+      <div class="workspace-heading">
+        <div>
+          <p class="eyebrow">OPERATIONS ARCHIVE</p>
+          <h2 id="logs-title">Process logs</h2>
+        </div>
+        <button class="outline-button" type="button" (click)="loadLogs()" [disabled]="logsState === 'loading'">
+          {{ logsState === 'loading' ? 'Loading logs…' : 'Refresh logs' }}
+        </button>
+      </div>
+      <p class="workspace-intro">Read-only activity history. Exception details are not shown.</p>
+      @if (logsState === 'idle') {
+        <p class="directory-note">Load the process log to view recent activity.</p>
+      } @else if (logsState === 'loading') {
+        <p class="directory-note" role="status">Retrieving process logs…</p>
+      } @else if (logsState === 'error') {
+        <p class="action-message error-message" role="alert">{{ logsError }}</p>
+      } @else if (logsState === 'empty') {
+        <p class="directory-note" role="status">There are no process logs to display.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <caption>Process log activity; detailed exception data is omitted</caption>
+            <thead>
+              <tr><th scope="col">Time (UTC)</th><th scope="col">Operation</th><th scope="col">Component</th><th scope="col">Outcome</th><th scope="col">Message</th></tr>
+            </thead>
+            <tbody>
+              @for (log of logs; track log.id) {
+                <tr>
+                  <td>{{ log.occurredAtUtc | date: 'MMM d, y, HH:mm:ss' : 'UTC' }}</td>
+                  <td>{{ log.operation }}</td>
+                  <td>{{ log.component }}</td>
+                  <td><span class="log-outcome" [class.log-failure]="log.outcome !== 'Success'">{{ log.outcome }}</span></td>
+                  <td>{{ log.outcome === 'Exception' ? 'Exception details are hidden.' : log.message }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+
+  <footer class="footer">
+    <span>ACTS <span class="footer-divider">/</span> ASTRONAUT CAREER TRACKING SYSTEM</span>
+    <span>FLIGHT RECORDS ARCHIVE</span>
+  </footer>
+</main>

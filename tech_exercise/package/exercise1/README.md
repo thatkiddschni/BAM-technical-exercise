@@ -61,3 +61,38 @@ Examine the code, find and resolve any flaws, if any exist. Identify design patt
 1. A Person's Previous Duty End Date is set to the day before the New Astronaut Duty Start Date when a new Astronaut Duty is received for a Person.
 1. A Person is classified as 'Retired' when a Duty Title is 'RETIRED'.
 1. A Person's Career End Date is one day before the Retired Duty Start Date.
+
+## Tests
+
+Run the API unit tests with:
+
+```sh
+dotnet test api.tests/StargateAPI.Tests.csproj
+```
+
+To collect code coverage, add `--collect:"XPlat Code Coverage"` to the command.
+
+## Astronaut records UI
+
+The Angular application is in `ui/`. Start the API using its `http` launch profile
+(`http://localhost:5204`), then start the UI:
+
+```sh
+cd ui
+npm install
+npm start
+```
+
+The development server proxies `/api` requests to the local API. The API base URL
+can be changed in `ui/src/environments/environment.ts`.
+
+Run the UI tests and production build with:
+
+```sh
+npm test
+npm run build
+```
+
+The UI provides workspaces for astronaut duty search, person lookup and directory
+management, duty creation, and read-only process logs. Exception details are
+omitted from the log view.
